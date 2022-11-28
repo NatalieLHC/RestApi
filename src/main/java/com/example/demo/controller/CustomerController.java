@@ -1,65 +1,54 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.Customer;
-import com.example.demo.exceptions.InvalidParameterException;
-import com.example.demo.exceptions.NotFoundException;
+import com.example.demo.entity.CustomerSearchParams;
+import com.example.demo.service.CustomerService;
+import com.example.demo.service.CustomerServiceImp;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.ArrayList;
 import java.util.List;
 
+@RequestMapping("/customers")
 @RestController
-public class CustomerController {
+public class CustomerController  {
 
-    private static int id = 0;
-    private List<Customer> db = new ArrayList<>();
+
+    private final CustomerService customerService;
+
+    public CustomerController(CustomerService customerService) {
+        this.customerService = customerService;
+    }
+
 
     @GetMapping()
-    public List<Customer> getCustomers() {
-        return db.stream().filter(customer -> !customer.getDeleted()).toList();
+    public List<Customer> getAll(CustomerSearchParams searchParams) {
+        return customerService.getAll(searchParams);
     }
 
     @GetMapping("/{id}")
     public Customer getCustomersById(@PathVariable int id) {
-        if (id <1){
-            throw new InvalidParameterException("Id must be positive");
-        }
-            return (getById(id));
+        return customerService.getById(id);
     }
 
     @PostMapping()
     public ResponseEntity<Customer> add(@RequestBody Customer customer) {
-        customer.setId(++id);
-        customer.setDeleted(false);
-        db.add(customer);
-        var location = UriComponentsBuilder.fromPath("/customers/" + id).build().toUri();
+        customerService.add(customer);
+        var location = UriComponentsBuilder.fromPath("/customers/" + customer.getId()).build().toUri();
         return ResponseEntity.created(location).body(customer);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Customer> delete(@PathVariable int id) {
-            var foundCustomer = getById(id);
-            foundCustomer.setDeleted(true);
-            return ResponseEntity.noContent().build();
+        customerService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
     public Customer update(@RequestBody Customer customer, @PathVariable int id) {
-            var foundCustomer = getById(id);
-            foundCustomer.setFirstName(customer.getFirstName());
-            foundCustomer.setLastName(customer.getLastName());
-            foundCustomer.setBirthDate(customer.getBirthDate());
-            return foundCustomer;
+        return customerService.update(id,customer);
     }
 
-    private Customer getById(int id){
-        var optional = db.stream().filter(customer1 -> customer1.getId() == id).findFirst();
-        if (optional.isEmpty()) {
-            throw new NotFoundException("Customer not found");
-        }
-        return optional.get();
-    }
 
 }
