@@ -13,8 +13,6 @@ import java.util.List;
 
 @Service
 public class AutoServiceImp implements AutoService {
-    private static int id = 0;
-    private List<Auto> db = new ArrayList<>();
 
     private final AutoReposit autoReposit;
 
@@ -22,9 +20,11 @@ public class AutoServiceImp implements AutoService {
         this.autoReposit = autoReposit;
     }
 
-    public List <Auto> getAll(AutoSearchParams autoSearchParams){
 
-        String govNumber = autoSearchParams.getGovNumber();
+    public List <Auto> getAll(AutoSearchParams autoSearchParams){
+        return autoReposit.findActive();
+
+        /*String govNumber = autoSearchParams.getGovNumber();
         String autoMark = autoSearchParams.getAutoMark();
         String autoModel = autoSearchParams.getAutoModel();
         LocalDate regDate = autoSearchParams.getRegDate();
@@ -46,6 +46,8 @@ public class AutoServiceImp implements AutoService {
             stream= stream.filter(auto -> auto.getRegDate().isEqual(regDate));
         }
         return stream.toList();
+
+         */
     }
 
 
@@ -54,18 +56,14 @@ public class AutoServiceImp implements AutoService {
         if (id <1){
             throw new InvalidParameterException("Id must be positive");
         }
-        var optional = db.stream().filter(auto1 -> auto1.getVehicleId() == id).findFirst();
-        if (optional.isEmpty()) {
-            throw new NotFoundException("Customer not found");
-        }
-        return optional.get();
+        return autoReposit.findById(id).orElseThrow(() -> new NotFoundException("Auto not found"));
+
     }
 
     public Auto add(Auto auto){
-        auto.setVehicleId(++id);
+        auto.setVehicleId(null);
         auto.setDeleted(false);
-        db.add(auto);
-        return auto;
+        return autoReposit.save(auto);
     }
 
     public Auto update(int id, Auto auto){
@@ -75,12 +73,14 @@ public class AutoServiceImp implements AutoService {
         foundAuto.setAutoModel(auto.getAutoModel());
         foundAuto.setColor(auto.getColor());
         foundAuto.setRegDate(auto.getRegDate());
-        return auto;
+        autoReposit.save(foundAuto);
+        return foundAuto;
     }
 
     public  void delete(int id){
         var foundAuto = getById(id);
         foundAuto.setDeleted(true);
+        autoReposit.save(foundAuto);
     }
 
 
