@@ -4,6 +4,7 @@ import com.example.demo.entity.Auto;
 import com.example.demo.entity.AutoSearchParams;
 import com.example.demo.exceptions.InvalidParameterException;
 import com.example.demo.exceptions.NotFoundException;
+import com.example.demo.repository.AutoReposit;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -15,7 +16,14 @@ public class AutoServiceImp implements AutoService {
     private static int id = 0;
     private List<Auto> db = new ArrayList<>();
 
+    private final AutoReposit autoReposit;
+
+    public AutoServiceImp(AutoReposit autoReposit) {
+        this.autoReposit = autoReposit;
+    }
+
     public List <Auto> getAll(AutoSearchParams autoSearchParams){
+
         String govNumber = autoSearchParams.getGovNumber();
         String autoMark = autoSearchParams.getAutoMark();
         String autoModel = autoSearchParams.getAutoModel();
@@ -39,6 +47,8 @@ public class AutoServiceImp implements AutoService {
         }
         return stream.toList();
     }
+
+
 
     public Auto getById(int id){
         if (id <1){
